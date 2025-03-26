@@ -15,12 +15,13 @@ public class UserService implements UserDetailsService {
     @Autowired
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+        System.out.println("UserRepository injected: " + (userRepository != null));
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        User user = userRepository.findUserByUsername(username).orElseThrow(() -> new UsernameNotFoundException(
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(
                 String.format("User '%s' not found", username)
         ));
         return UserDetailsImpl.build(user);

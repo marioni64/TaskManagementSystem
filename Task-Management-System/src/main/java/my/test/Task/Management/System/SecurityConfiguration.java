@@ -4,7 +4,6 @@ package my.test.Task.Management.System;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -28,9 +27,9 @@ public class SecurityConfiguration {
     private TokenFilter tokenFilter;
     private UserService userService;
 
-    public SecurityConfiguration(){
 
-    }
+
+    public SecurityConfiguration(){}
 
     @Autowired
     public void setTokenFilter(TokenFilter tokenFilter){
@@ -50,12 +49,14 @@ public class SecurityConfiguration {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    public AuthenticationManagerBuilder configAuthenticationManagerBuilder(
-            AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception{
-        authenticationManagerBuilder.userDetailsService(userService).passwordEncoder(passwordEncoder());
 
-        return authenticationManagerBuilder;
-    }
+//    @Bean
+//    public AuthenticationManagerBuilder configAuthenticationManagerBuilder(
+//            AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception{
+//        authenticationManagerBuilder.userDetailsService(userService).passwordEncoder(passwordEncoder());
+//
+//        return authenticationManagerBuilder;
+//    }
 
 
     @Bean
@@ -77,7 +78,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/secured/user").fullyAuthenticated()
                         .anyRequest().permitAll()
-                ).addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
+                )
+                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
 
 
         return http.build();

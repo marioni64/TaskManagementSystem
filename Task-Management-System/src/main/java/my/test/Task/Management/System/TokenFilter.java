@@ -17,8 +17,13 @@ import java.io.IOException;
 @Component
 public class TokenFilter extends OncePerRequestFilter {
 
-    private JWTCore jwtCore;
-    private UserDetailsService userDetailsService;
+    private final JWTCore jwtCore;
+    private final UserDetailsService userDetailsService;
+
+    public TokenFilter(JWTCore jwtCore, UserDetailsService userDetailsService) {
+        this.jwtCore = jwtCore;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -33,17 +38,21 @@ public class TokenFilter extends OncePerRequestFilter {
             String headerAuth = request.getHeader("Authorization");
             if (headerAuth != null && headerAuth.startsWith("Bearer ")){
                 jwt = headerAuth.substring(7);
+
             }
             if (jwt != null){
                 try {
                     username = jwtCore.getNameFromJwt(jwt);
+                    System.out.println("Extracted username from token: " + username);
                 } catch (ExpiredJwtException e) {
                     //TODO
                 }
 
                 if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
                     userDetails = userDetailsService.loadUserByUsername(username);
-                    auth = new UsernamePasswordAuthenticationToken(userDetails, null);
+                    auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+
                 }
             }
 

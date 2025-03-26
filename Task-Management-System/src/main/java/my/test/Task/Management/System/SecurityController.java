@@ -3,6 +3,7 @@ package my.test.Task.Management.System;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -36,7 +39,7 @@ public class SecurityController {
     }
 
     @Autowired
-    public void setAuthenticationManager(AuthenticationManager authenticationManager) {
+    public void setAuthenticationManager(@Qualifier("authenticationManager")  AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
     }
 
@@ -58,10 +61,10 @@ public class SecurityController {
         User user = new User();
         user.setUsername(signupRequest.getUsername());
         user.setEmail(signupRequest.getEmail());
-        user.setPassword(signupRequest.getPassword());
+        user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         userRepository.save(user);
 
-        return ResponseEntity.ok("Success,  baby");
+        return ResponseEntity.ok("Success, baby");
     }
 
 
@@ -71,17 +74,17 @@ public class SecurityController {
         Authentication authentication = null;
 
         try {
-            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                    signinRequest.getUsername(), signinRequest.getPassword()));
+            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signinRequest.getUsername(), signinRequest.getPassword()));
         } catch (BadCredentialsException e) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt = JWTCore.generateToken(authentication);
+        String jwt = jwtCore.generateToken(authentication);
         return ResponseEntity.ok(jwt);
 
     }
+
 
 }

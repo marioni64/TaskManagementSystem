@@ -3,38 +3,45 @@ package my.test.Task.Management.System;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.Authentication;
 
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
 public class JWTCore {
 
     @Value("${testing.app.secret}")
-    private static String secret;
+    private String secret;
 
     @Value("${testing.app.lifeTime}")
-    private static int lifeTime;
+    private int lifeTime;
 
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
-    public static String generateToken(Authentication authentication){
+    public String generateToken(Authentication authentication){
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + lifeTime))
-                .signWith(SignatureAlgorithm.HS256, secret)
+                .subject(userDetails.getUsername())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + lifeTime))
+                .signWith(getSigningKey()) // Используем SecretKey вместо строки
                 .compact();
     }
 
-
     public String getNameFromJwt(String token) {
-        return Jwts.parser().setSigningKey(secret).build().parseSignedClaims(token).getPayload().getSubject();
-                //.setSigningKey(secret).parseClaimsJws(token).getBody().getSubject();
-
+        return Jwts.parser()
+                .verifyWith(getSigningKey()) // Замена setSigningKey()
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
     }
 
 
